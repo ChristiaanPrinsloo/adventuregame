@@ -25,6 +25,7 @@ inventory = {"Rations": 0,
 
 # Story conditions
 stepStory = 0
+move = 0
 
 print("Welcome to GraveKeeper!")
 character["Name"] = input("Input Name:").title()
@@ -62,6 +63,7 @@ def inventoryCheck():
         if inventory["Rations"] > 0:
             print("{} eats a Ration. It tastes like stale bread and gelatinous protein. Delicious!".format(character["Name"]))
             hunger_level += 2
+            inventory["Rations"] -= 1
             return
         else:
             print("{} has no rations. Better starve then.".format(character["Name"]))
@@ -71,6 +73,7 @@ def inventoryCheck():
             print("{} pops some sanity pills in his mouth. He feels ravenously hungry, but more stable.".format(character["Name"]))
             hunger_level -= 1
             sanity += 1
+            inventory["Sanity Pills"] -= 1
             return
         else:
             print("{} has no sanity pills. You can still pretend to take them though, maybe that'll help.".format(character["Name"]))
@@ -90,8 +93,8 @@ def scavenge():
         print("\nScavenging in this place was a horrible idea. The very shadows of this place eat at {}'s mind.".format(character["Name"]))
         sanity -= 1
     if actualLocation[0] == "rare":
-        scavengeCheck = random.randint(0, 5) + character["Luck"] / 2
-        if scavengeCheck > 4.5:
+        scavengeCheck = random.randint(0, 7) + character["Luck"] / 2
+        if scavengeCheck > 6.5:
             print("\nWhether it be the guiding hand of God or insatiable luck, {} somehow manages to find something!".format(character["Name"]))
             outcome = [foundSomething(), sanity, hunger_level]
             return outcome
@@ -99,8 +102,8 @@ def scavenge():
             print("\n What did {} expect to find? There's nothing here but lingering regrets, and a culminating desire to drink.".format(character["Name"]))
             return
     if actualLocation[0] == "uncommon":
-        scavengeCheck = random.randint(0, 5) + character["Luck"] / 2
-        if scavengeCheck > 3.5:
+        scavengeCheck = random.randint(0, 7) + character["Luck"] / 2
+        if scavengeCheck > 6.5:
             print("\nToday is {}'s lucky day! Something has been found!".format(character["Name"]))
             outcome = [foundSomething(), sanity, hunger_level]
             return outcome
@@ -108,8 +111,8 @@ def scavenge():
             print("\n Better luck next time. Nothing's here.")
             return
     if actualLocation[0] == "common":
-        scavengeCheck = random.randint(0, 5) + character["Luck"] / 2
-        if scavengeCheck > 1.5:
+        scavengeCheck = random.randint(0, 7) + character["Luck"] / 2
+        if scavengeCheck > 4.5:
             print("\nIt's hard to miss good loot here. {} finds something!".format(character["Name"]))
             outcome = [foundSomething(), sanity, hunger_level]
             return outcome
@@ -122,23 +125,23 @@ def foundSomething():
     global inventory
     global sanity
     global hunger_level
-    print()
+
     if inventory["Backpack"] == False:
         scavengeCheck = random.randint(0, 7)
         if scavengeCheck <= 3:
             print("{} finds a ration pack!".format(character["Name"]))
             inventory["Rations"] += 1
             return
-        if scavengeCheck <= 6:
+        elif scavengeCheck <= 6:
             print("{} finds some sanity pills!".format(character["Name"]))
             inventory["Sanity Pills"] += 1
             return
-        if scavengeCheck == 7:
+        else:
             print("{} finds a backpack! Inventory space up!".format(character["Name"]))
             inventory["Backpack"] = True
-            inventory["InvSpace"] += 3
+            inventory["invSpace"] += 3
             return
-    else:
+    elif inventory["Backpack"] == True:
         scavengeCheck = random.randint(0, 1)
         if scavengeCheck <= 0:
             print("{} finds a ration pack!".format(character["Name"]))
@@ -149,7 +152,8 @@ def foundSomething():
             inventory["Sanity Pills"] += 1
             return
 
-def locationHungerCheck(hunger_level):
+def locationHungerCheck():
+    global hunger_level
     actualLocation = locations[currentLocation]
     if actualLocation[1] != "far":
         hungercheck = random.randint(1, 10) + character["Tenacity"]
@@ -167,9 +171,10 @@ def locationHungerCheck(hunger_level):
             print(
                 "\nThe far journey to the stow-away locale should have starved {}'s essences, but {} tenaciously clings to life.".format(
                     character["Name"], character["Name"]))
-    return hunger_level
+    return
 
-def locationSanityCheck(sanity):
+def locationSanityCheck():
+    global sanity
     actualLocation = locations[currentLocation]
     if actualLocation[1] != "haunted":
         sanitycheck = random.randint(1, 22) + character["Willpower"] * 2
@@ -185,11 +190,10 @@ def locationSanityCheck(sanity):
                 "\n Something horrific in this place stirs the precipice of {}'s mind, {} sanity is now one step closer to the gaping abyss.".format(
                     character["Name"], character["Gender"]))
             sanity -= 1
-        if sanitycheck < 6:
-            print("\n Some sights are never forgotten. {}'s sanity is now two steps closer to the gaping abyss.".format(
-                character["Name"]))
+        elif sanitycheck < 6:
+            print("\n Some sights are never forgotten. {}'s sanity is now two steps closer to the gaping abyss.".format(character["Name"]))
             sanity -= 2
-    return sanity
+    return
 
 
 # Inputs character's starting statistics
@@ -214,9 +218,10 @@ choice = 0
 while True:
     actualLocation = locations[currentLocation]
     #hunger and sanity check
-    if choice == 1:
-        hunger_level = locationHungerCheck(hunger_level)
-        sanity = locationSanityCheck(sanity)
+    if move == 1:
+        locationHungerCheck()
+        locationSanityCheck()
+        move = 0
 
     if hunger_level > 3:
         hungerstatus = "Sated"
@@ -224,7 +229,7 @@ while True:
         hungerstatus = "Hungry"
     elif hunger_level == 1:
         hunger_status = "Starving"
-    else:
+    elif hunger_level < 3:
         print("Ending 1 of 3: Famine's Embrace (Die of starvation!)")
         break
 
@@ -234,7 +239,7 @@ while True:
         sanitystatus = "Paranoid"
     elif sanity == 1:
         sanitystatus = "Psychotic"
-    else:
+    elif sanity < 1:
         print("Ending 2 of 3: The Raving Graveswarden (Lose your mind!)")
         break
 
@@ -265,9 +270,11 @@ while True:
                 locationChoice = input("Input number to enact your will: ")
                 if locationChoice == "1":
                     currentLocation = "Graveyard"
+                    move = 1
                     break
                 else:
                     currentLocation = "Abandoned Villa"
+                    move = 1
                     break
             if currentLocation == "Graveyard":
                 print("1. Castle Entrance")
@@ -276,9 +283,11 @@ while True:
                 print(locationChoice)
                 if locationChoice == "1":
                     currentLocation = "Castle Entrance"
+                    move = 1
                     break
                 else:
                     currentLocation = "Abandoned Villa"
+                    move = 1
                     break
             if currentLocation == "Abandoned Villa":
                 print("1. Castle Entrance")
@@ -286,11 +295,11 @@ while True:
                 locationChoice = input("Input number to enact your will: ")
                 if locationChoice == "1":
                     currentLocation = "Castle Entrance"
-                    actualLocation = locations["Castle Entrance"]
+                    move = 1
                     break
                 else:
                     currentLocation = "Graveyard"
-                    actualLocation = locations["Graveyard"]
+                    move = 1
                     break
     elif choice == "2":
         while True:
@@ -341,3 +350,5 @@ while True:
                     print("\nFrom the rust-moles of her sun-seared skin, the eye of the prize reveals itself.")
                     print("\nTHE KEY.")
                     print("\nLet us not keep this a secret for long. To the castle!")
+                    inventory["Backpack"] = False
+                    stepStory = 2
